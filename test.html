@@ -1,0 +1,15 @@
+<head>
+  <script src="jakecache.js"></script>
+  <script>
+    function begin() {
+        let konsole = document.querySelector("#console");
+        let cache = new JakeCacheManifest("./appcache.manifest");
+        cache.parse().then(result => {
+            konsole.innerHTML = JSON.stringify(result);
+        });
+    }
+  </script>
+</head>
+<body onload="begin()">
+  <div id="console"></div>
+</body>
