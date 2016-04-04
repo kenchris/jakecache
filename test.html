@@ -3,9 +3,12 @@
   <script>
     function begin() {
         let konsole = document.querySelector("#console");
-        let cache = new JakeCacheManifest("./appcache.manifest");
-        cache.parse().then(result => {
-            konsole.innerHTML = JSON.stringify(result);
+        let manifest = new JakeCacheManifest("./appcache.manifest");
+        manifest.parse().then(_ => {
+            console.log(manifest.fallback);
+            console.log(manifest.cache);
+            console.log(manifest.network);
+            console.log(manifest.allowNetworkFallback);
         });
     }
   </script>
