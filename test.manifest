@@ -1,0 +1,10 @@
+CACHE MANIFEST
+# 2010-06-18:v2
+
+# Explicitly cached 'master entries'.
+CACHE:
+/test.html
+
+# Resources that require the user to be online.
+NETWORK:
+*

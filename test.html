@@ -3,14 +3,15 @@
   <script>
     function begin() {
         let konsole = document.querySelector("#console");
-        let manifest = new JakeCacheManifest("./appcache.manifest");
-        manifest.parse().then(_ => {
-            console.log(manifest.fallback);
-            console.log(manifest.cache);
-            console.log(manifest.network);
-            console.log(manifest.allowNetworkFallback);
-        });
     }
+    
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/jakecache-sw.js').then(function(registration) {
+      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    }).catch(function(err) {
+      console.log('ServiceWorker registration failed: ', err);
+    });
+}
   </script>
 </head>
 <body onload="begin()">
