@@ -53,7 +53,7 @@ NETWORK:
 
 MIT
 
-## About this project
+### About this project
 This is a project by [Kenneth Christiansen](https://twitter.com/kennethrohde) & [Kenneth Auchenberg](https://twitter.com/auchenberg) and a result of too much 🍺 and ☕.
 
 *Sarcasm may occur*
