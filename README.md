@@ -10,13 +10,15 @@ Application Cache was a great step forward, but had several fundemental flaws th
 
 Service Worker is great, but if you ever had a look at it's API(s) you realize that they are complicated imperative JavaScript API's. These API's tend to scary many web developers who perfer a nice forgiving declarative approach. So in order to fix the *too* complicated Service Worker API, we are super excited to introduce **JakeCache**, a declarative manifest-driven application cache for web applications implemented on top of ServiceWorker.
 
-*Sarcasm may occur*
+*Sarcasm may occur* ;-)
+
+JakeCache serves the additional purpose of being as compatible with the HTML5 Application Cache (aka AppCache) as we could make it and may serve as a polyfill in browsers removing such support. Patches are welcome!
 
 ## Get started
 
 1. Create a new JakeCache Manifest, `app.jakecache` and save it in your root:
 ```
-JAKECACHE MANIFEST
+CACHE MANIFEST
 # 2010-06-18:v2
 
 # Explicitly cached 'master entries'.
@@ -28,18 +30,6 @@ NETWORK:
 *
 ```
 
+1. Include ```<script src="jakescript.js"></script>``` or similar.
 2. Include ```<html manifest="app.jakecache">``` in your HTML.
 3. That's it!
-
-
-...
-
-
-
-
-
-
-
-
-
-
