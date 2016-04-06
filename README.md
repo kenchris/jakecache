@@ -1,6 +1,6 @@
 # JakeCache
 
-Declarative manifest-driven app cache top of ServiceWorker.
+🎂 Declarative manifest-driven app cache top of ServiceWorker.
 
 ![](http://i.imgur.com/njqdZ5L.png?1)
 
@@ -8,11 +8,17 @@ Buiding offline-first applications has been the ubiquius dream since the early d
 
 Application Cache was a great step forward, but had several fundemental flaws that were made famous by [Jake Archibald](https://twitter.com/jaffathecake)'s epic [Application Cache is a Douchebag](http://alistapart.com/article/application-cache-is-a-douchebag) article and [talk](https://www.youtube.com/watch?v=cR-TP6jOSQM). So Jake, [Alex Russel](https://twitter.com/slightlylate) and many others, have been busy working on the next generation of application caching API's which today are know as the [Service Worker Specification](https://github.com/slightlyoff/ServiceWorker).
 
-Service Worker is great, but if you ever had a look at it's API(s) you realize that they are complicated imperative JavaScript API's. These API's tend to scary many web developers who perfer a nice forgiving declarative approach. So in order to fix the *too* complicated Service Worker API, we are super excited to introduce **JakeCache**, a declarative manifest-driven application cache for web applications implemented on top of ServiceWorker.
+Service Worker is great, but if you ever had a look at it's API(s) you realize that they are complicated imperative JavaScript API's. These API's tend to scary many web developers who perfer a nice forgiving declarative approach. 
+
+So in order to fix the *too* complicated Service Worker API, we are super excited to introduce **JakeCache**. A declarative manifest-driven application cache for web applications implemented on top of ServiceWorker.
 
 *Sarcasm may occur* ;-)
 
-JakeCache serves the additional purpose of being as compatible with the HTML5 Application Cache (aka AppCache) as we could make it and may serve as a polyfill in browsers removing such support. Patches are welcome!
+### Polyfil 
+
+JakeCache serves the additional purpose of being as compatible with the HTML5 Application Cache (aka AppCache) as we could make it and may serve as a polyfill in browsers removing such support. 
+
+Patches are welcome!
 
 ## Get started
 
@@ -30,6 +36,6 @@ NETWORK:
 *
 ```
 
-1. Include ```<script src="jakescript.js"></script>``` or similar.
-2. Include ```<html manifest="app.jakecache">``` in your HTML.
+1. Add ```<script src="jakecache.js"></script>```to your HTML.
+2. Add ```<html manifest="app.jakecache">``` to your HTML.
 3. That's it!
