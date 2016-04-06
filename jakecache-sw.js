@@ -1,11 +1,25 @@
+self.importScripts('third_party/md5/md5.min.js');
+
 class JakeCacheManifest {
-  constructor(path = "") {
-    this._path = path;
+  constructor() {
+    this._path = null;
+    this._hash = null;
   }
 
-  parse() {
+  groupName() {
+    let filename = this._path.substring(this._path.lastIndexOf('/') + 1);
+    return filename;
+  }
+
+  fetchData(path, options) {
+    this._path = path;
+
     // http://html5doctor.com/go-offline-with-application-cache/
-    return fetch(this._path).then((response) => {
+    return fetch(new Request(this._path, options)).then((response) => {
+      if (response.type == 'opaque' || response.status == 404 || response.status == 410) {
+        return Promise.reject();
+      }
+
       var reader = response.body.getReader();
       var decoded = '';
       var decoder = new TextDecoder();
@@ -17,7 +31,14 @@ class JakeCacheManifest {
             stream: !result.done
           });
 
-          var lines = decoded.split(/\r|\n/);
+          let hash = md5(decoded);
+          console.log("hashes " + this._hash + " " + hash);
+          if (hash === this._hash) {
+            return resolve(false);
+          }
+          this._hash = hash;
+
+          let lines = decoded.split(/\r|\n/);
           let header = "cache"; // default.
 
           let firstLine = lines.shift();
@@ -79,7 +100,7 @@ class JakeCacheManifest {
             }
           }
 
-          resolve();
+          resolve(true);
         });
       });
     });
@@ -89,19 +110,18 @@ class JakeCacheManifest {
 self.addEventListener('message', function(event) {
   switch (event.data.command) {
     case 'update':
-      update();
+      update({ cache: "reload" });
       break;
     case 'abort':
+      postMessage({ type: "error", message: "Not implementable without cancellable promises." });
       break;
     case 'swapCache':
+      swapCache();
       break;
-  } 
+  }
 })
 
-
-var CACHE_NAME = 'jakecache';
-
-let manifest = new JakeCacheManifest("test.manifest");
+let manifest = new JakeCacheManifest();
 
 const CacheStatus = {
   UNCACHED: 0,
@@ -122,29 +142,70 @@ function postMessage(msg) {
   });
 }
 
-function update() {
+function swapCache() {
+  caches.keys().then(keyList => {
+    return Promise.all(keyList.map(key => {
+      return caches.delete(key);
+    }));
+  }).then(() => {
+    // FIXME: Add new keys.
+  });
+}
+
+// 7.9.4
+function update(options = {}) {
+  // *.2.2
+  this.options = options;
+  this.cacheGroup = "test.manifest";
   return new Promise((resolve, reject) => {
+    // *.2.4 and *.2.6
     if (cacheStatus == CacheStatus.CHECKING) {
       postMessage({ type: "checking" });
+      postMessage({ type: "abort" });
       reject();
     }
+    // *.2.4, *.2.5, *.2.6
     if (cacheStatus == CacheStatus.DOWNLOADING) {
       postMessage({ type: "checking" });
       postMessage({ type: "downloading" });
+      postMessage({ type: "abort" });
       reject();
     }
     resolve();
   }).then(() => {
+    // *.2.7 and *.2.8
     cacheStatus = CacheStatus.CHECKING;
     postMessage({ type: "checking" });
-    // FIXME: 7.9.4.6: Should refetch here. If fail 404/410 => obsolete.
-    return manifest.parse();
-  }).then(() => {
+
+    // FIXME: *.6: Fetch manifest, mark obsolete if fails.
+    return manifest.fetchData(this.cacheGroup, this.options).catch(err => {
+      cacheStatus = CacheStatus.OBSOLETE;
+      postMessage({ type: "obsolete" });
+      // FIXME: *.7: Error for each existing entry.
+      cacheStatus = CacheStatus.IDLE;
+      postMessage({ type: "idle" });
+      return Promise.reject();
+    })
+  }).then(modified => {
+    this.modified = modified;
+    // *.2: If cache group already has an application cache in it, then
+    // this is an upgrade attempt. Otherwise, this is a cache attempt.
+    return caches.keys().then(cacheNames => {
+      return Promise.resolve(!!cacheNames.length);
+    });
+  }).then(upgrade => {
+    this.upgrade = upgrade;
+    if (this.upgrade && !this.modified) {
+      cacheStatus = CacheStatus.IDLE;
+      postMessage({ type: "noupdate" });
+      return Promise.reject();
+    }
+
     // Appcache is no-cors by default.
     this.requests = manifest.cache.map(url => {
       return new Request(url, { mode: 'no-cors' });
     });
-    
+
     cacheStatus = CacheStatus.DOWNLOADING;
     postMessage({ type: "downloading" });
 
@@ -161,7 +222,7 @@ function update() {
           loaded: ++(this.loaded),
           total: this.total
         });
-        
+
         // section 5.6.4 of http://www.w3.org/TR/2011/WD-html5-20110525/offline.html
 
         // Redirects are fatal.
@@ -188,28 +249,34 @@ function update() {
       });
     }));
   }).then(responses => {
-    // If cache group already has an application cache in it, then
-    // this is an upgrade attempt. Otherwise, this is a cache attempt.
-    //cacheStatus = CacheStatus.UPDATEREADY;
-    //postMessage({ type: "updateready" });
-    
-    cacheStatus = CacheStatus.CACHED;
-    postMessage({ type: "cached" });
-    
-    return caches.open(CACHE_NAME).then(cache => { 
-      return Promise.all(responses.filter(response => response).map((response, index) => {
+    this.responses = responses.filter(response => response);
+    if (this.upgrade) {
+      cacheStatus = CacheStatus.UPDATEREADY;
+      postMessage({ type: "updateready" });
+      return Promise.reject();
+    } else {
+      return Promise.resolve(this.responses);
+    }
+  }).then(responses => {
+    console.log("Adding to cache " + manifest.groupName());
+    return caches.open(manifest.groupName()).then(cache => {
+      return Promise.all(responses.map((response, index) => {
         return cache.put(requests[index], response);
       }));
+    }).then(_ => {
+      cacheStatus = CacheStatus.CACHED;
+      postMessage({ type: "cached" });
     });
+  }).catch(err => {
+    if (err) {
+      postMessage({ type: "error" }, err);
+      console.log(err);
+    }
   });
 }
 
 self.addEventListener('install', function(event) {
-  event.waitUntil(update());
-});
-
-self.addEventListener('activate', function(event) {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil(update);
 });
 
 self.addEventListener('fetch', function(event) {
@@ -220,44 +287,44 @@ self.addEventListener('fetch', function(event) {
     return;
   }
 
-  event.respondWith(manifest.parse().then(_ => {
+  // FIXME: Get data from IndexedDB instead.
+  event.respondWith(manifest.fetchData("test.manifest").then(_ => {
     // Process network-only.
     if (manifest.network.filter(entry => entry.href === url.href).length) {
       return fetch(event.request);
     }
 
-    caches.match(event.request)
-      .then(response => {
-        // Cache always wins.
-        if (response) {
-          return response;
-        }
+    return caches.match(event.request).then(response => {
+      // Cache always wins.
+      if (response) {
+        return response;
+      }
 
-        // Fallbacks consult network, and falls back on failure.
-        for (let [path, fallback] of manifest.fallback) {
-          if (url.href.indexOf(path) === 0) {
-            return fetch(event.request).then(response => {
-              // Same origin only.
-              if (new URL(response.url).origin != location.origin) {
+      // Fallbacks consult network, and falls back on failure.
+      for (let [path, fallback] of manifest.fallback) {
+        if (url.href.indexOf(path) === 0) {
+          return fetch(event.request).then(response => {
+            // Same origin only.
+            if (new URL(response.url).origin != location.origin) {
+              throw Error();
+            }
+
+            if (response.type != 'opaque') {
+              if (response.status < 200 || response.status >= 300) {
                 throw Error();
               }
+            }
+          }).catch(_ => {
+            return cache.match(fallback);
+          });
+          }
+        }
 
-              if (response.type != 'opaque') {
-                if (response.status < 200 || response.status >= 300) {
-                  throw Error();
-                }
-              }
-            }).catch(_ => {
-              return cache.match(fallback);
-            });
-           }
-         }
+        if (manifest.allowNetworkFallback) {
+          return fetch(event.request);
+        }
 
-         if (manifest.allowNetworkFallback) {
-           return fetch(event.request);
-         }
-
-         return response; // failure.
-      });
+        return response; // failure.
+    });
   }));
 });

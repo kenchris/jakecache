@@ -60,23 +60,54 @@ class JakeCache extends PolyfilledEventTarget {
   constructor() {
     super(["abort", "cached", "checking",
            "downloading", "error", "obsolete",
-           "progress", "updateready"]);
+           "progress", "updateready", "noupdate"]);
 
     if (window.jakeCache)
       return window.jakeCache;
     window.jakeCache = this;
 
     this[_status] = this.UNCACHED;
-    
+
     navigator.serviceWorker.addEventListener('message', event => {
-       if (event.data.type) {
-         if (event.data.type == "progress") {
-          this.dispatchEvent(new ProgressEvent(event.data.type, event.data));
-         } else {
-          this.dispatchEvent(new CustomEvent(event.data.type));
-         }
-       }
-    }); 
+      switch(event.data.type) {
+        case "abort":
+          this.dispatchEvent(new CustomEvent("abort"));
+          break;
+        case "idle":
+          this[_status] = this.IDLE;
+          break;
+        case "checking":
+          this[_status] = this.CHECKING;
+          this.dispatchEvent(new CustomEvent("checking"));
+          break;
+        case "cached":
+          this[_status] = this.IDLE;
+          this.dispatchEvent(new CustomEvent("cached"));
+          break;
+        case "downloading":
+          this[_status] = this.DOWNLOADING;
+          this.dispatchEvent(new CustomEvent("downloading"));
+          break;
+        case "updateready":
+          this[_status] = this.UPDATEREADY;
+          this.dispatchEvent(new CustomEvent("updateready"));
+          break;
+        case "noupdate":
+          this[_status] = this.IDLE;
+          this.dispatchEvent(new CustomEvent("noupdate"));
+          break;
+        case "progress":
+          this.dispatchEvent(new ProgressEvent("progress", event.data));
+          break;
+        case "obsolete":
+          this[_status] = this.OBSOLETE;
+          this.dispatchEvent(new CustomEvent("obsolete"));
+          break;
+        case "error":
+         this.dispatchEvent(new ErrorEvent("error", event.data));
+         break;
+      }
+    });
   }
 
   get UNCACHED() { return 0; }
@@ -97,7 +128,7 @@ class JakeCache extends PolyfilledEventTarget {
       throw new DOMException(DOMException.INVALID_STATE_ERR,
         "there is no application cache to update.");
     }
-    
+
     navigator.serviceWorker.controller.postMessage(
       { command: 'update' });
   }
