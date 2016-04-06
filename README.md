@@ -17,6 +17,10 @@ Service Worker is great, but if you ever had a look at it's API(s) you realize t
 
 So in order to **fix** the **too** complicated Service Worker API, we are super excited to introduce **JakeCache**. A declarative manifest-driven application cache for web applications implemented on top of ServiceWorker.
 
+*Sarcasm may occur in this project*
+
+😂
+
 ### Polyfil 
 
 JakeCache serves the additional purpose of being as compatible with the HTML5 Application Cache (aka AppCache) as we could make it and may serve as a polyfill in browsers removing such support. 
@@ -55,7 +59,3 @@ See [LICENSE.md](https://github.com/kenchris/jakecache/blob/master/LICENSE.md)
 
 ### About this project
 This is a project by [Kenneth Christiansen](https://twitter.com/kennethrohde) & [Kenneth Auchenberg](https://twitter.com/auchenberg) and a result of too much 🍺 and ☕.
-
-*Sarcasm may occur*
-
-😂 :see_no_evil:
