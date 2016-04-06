@@ -69,7 +69,6 @@ class JakeCache extends PolyfilledEventTarget {
     this[_status] = this.UNCACHED;
     
     navigator.serviceWorker.addEventListener('message', event => {
-      console.log("received msg " + event.data);
        if (event.data.type) {
          if (event.data.type == "progress") {
           this.dispatchEvent(new ProgressEvent(event.data.type, event.data));

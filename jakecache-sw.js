@@ -1,96 +1,95 @@
 class JakeCacheManifest {
-    constructor(path = "") {
-        this._path = path;
-    }
+  constructor(path = "") {
+    this._path = path;
+  }
 
-    parse() {
-        // http://html5doctor.com/go-offline-with-application-cache/
-        return fetch(this._path).then((response) => {
-            var reader = response.body.getReader();
-            var decoded = '';
-            var decoder = new TextDecoder();
-            this._rawData = { cache: [], fallback: [], network: []};
+  parse() {
+    // http://html5doctor.com/go-offline-with-application-cache/
+    return fetch(this._path).then((response) => {
+      var reader = response.body.getReader();
+      var decoded = '';
+      var decoder = new TextDecoder();
+      this._rawData = { cache: [], fallback: [], network: []};
 
-            return reader.read().then((result) => {
-                return new Promise((resolve, reject) => {
-                    decoded += decoder.decode(result.value || new Uint8Array, {
-                        stream: !result.done
-                    });
+      return reader.read().then((result) => {
+        return new Promise((resolve, reject) => {
+          decoded += decoder.decode(result.value || new Uint8Array, {
+            stream: !result.done
+          });
 
-                    var lines = decoded.split(/\r|\n/);
-                    let header = "cache"; // default.
+          var lines = decoded.split(/\r|\n/);
+          let header = "cache"; // default.
 
-                    if (lines.shift() !== "CACHE MANIFEST") {
-                        return reject();
-                    }
+          let firstLine = lines.shift();
+          if (firstLine !== "CACHE MANIFEST") {
+            return reject();
+          }
 
-                    for (let line of lines) {
-                        line = line.replace(/#.*$/, "").trim();
+          for (let line of lines) {
+            line = line.replace(/#.*$/, "").trim();
 
-                        if (line === "") {
-                          continue;
-                        }
+            if (line === "") {
+              continue;
+            }
 
-                        let res = line.match(/^([A-Z]*):/);
-                        if (res) {
-                            header = res[1].toLowerCase();
-                            continue;
-                        }
+            let res = line.match(/^([A-Z]*):/);
+            if (res) {
+              header = res[1].toLowerCase();
+              continue;
+            }
 
-                        if (!this._rawData[header]) {
-                            this._rawData[header] = [];
-                        }
-                        this._rawData[header].push(line);
-                    }
+            if (!this._rawData[header]) {
+              this._rawData[header] = [];
+            }
+            this._rawData[header].push(line);
+          }
 
-                    this.cache = [];
-                    // Ignore different protocol
-                    for (let pathname of this._rawData.cache) {
-                      let path = new URL(pathname, location);
-                      if (path.protocol === location.protocol) {
-                        this.cache.push(path);
-                      }
-                    }
+          this.cache = [];
+          // Ignore different protocol
+          for (let pathname of this._rawData.cache) {
+            let path = new URL(pathname, location);
+            if (path.protocol === location.protocol) {
+              this.cache.push(path);
+            }
+          }
 
-                    this.fallback = [];
-                    for (let entry of this._rawData.fallback) {
-                      let [pathname, fallbackPath] = entry.split(" ");
-                      let path = new URL(pathname, location);
-                      let fallback = new URL(fallbackPath, location);
+          this.fallback = [];
+          for (let entry of this._rawData.fallback) {
+            let [pathname, fallbackPath] = entry.split(" ");
+            let path = new URL(pathname, location);
+            let fallback = new URL(fallbackPath, location);
 
-                      // Ignore cross-origin fallbacks
-                      if (path.origin === fallback.origin) {
-                        this.fallback.push([path, fallback]);
-                        this.cache.push(fallback);
-                      }
-                    }
+            // Ignore cross-origin fallbacks
+            if (path.origin === fallback.origin) {
+              this.fallback.push([path, fallback]);
+              this.cache.push(fallback);
+            }
+          }
 
-                    this.allowNetworkFallback = false;
-                    this.network = [];
-                    for (let entry of this._rawData.network) {
-                      if (entry === '*') {
-                        this.allowNetworkFallback = true;
-                        continue;
-                      }
-                      let path = new URL(entry, location);
-                      if (path.protocol === location.protocol) {
-                        this.network.push(path);
-                      }
-                    }
+          this.allowNetworkFallback = false;
+          this.network = [];
+          for (let entry of this._rawData.network) {
+            if (entry === '*') {
+              this.allowNetworkFallback = true;
+              continue;
+            }
+            let path = new URL(entry, location);
+            if (path.protocol === location.protocol) {
+              this.network.push(path);
+            }
+          }
 
-                    resolve();
-                });
-            });
+          resolve();
         });
-    }
+      });
+    });
+  }
 }
 
 self.addEventListener('message', function(event) {
-  console.log('Handling message event:', event);
   switch (event.data.command) {
     case 'update':
       update();
-      console.log("SW: Updating...");
       break;
     case 'abort':
       break;
@@ -116,7 +115,6 @@ const CacheStatus = {
 let cacheStatus = CacheStatus.UNCACHED;
 
 function postMessage(msg) {
-  console.log("attempting to send: " + JSON.stringify(msg));
   return self.clients.matchAll().then(clients => {
     return Promise.all(clients.map(client => {
       return client.postMessage(msg);
@@ -208,6 +206,10 @@ function update() {
 
 self.addEventListener('install', function(event) {
   event.waitUntil(update());
+});
+
+self.addEventListener('activate', function(event) {
+  event.waitUntil(self.clients.claim());
 });
 
 self.addEventListener('fetch', function(event) {
