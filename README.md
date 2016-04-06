@@ -2,7 +2,12 @@
 
 🎂 Declarative manifest-driven app cache top of ServiceWorker.
 
+[![Build status](https://travis-ci.org/kenchris/jakecache.svg?branch=master)](https://travis-ci.org/kenchris/jakecache)
+[![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://github.com/feross/standard)
+
 ![](http://i.imgur.com/njqdZ5L.png?1)
+
+## Why?
 
 Buiding offline-first applications has been the ubiquius dream since the early days of the web. Google started by introducing Google Gears, and later followed the web community by building [Application Cache](https://www.w3.org/TR/2011/WD-html5-20110525/offline.html).
 
@@ -17,6 +22,12 @@ So in order to **fix** the **too** complicated Service Worker API, we are super 
 JakeCache serves the additional purpose of being as compatible with the HTML5 Application Cache (aka AppCache) as we could make it and may serve as a polyfill in browsers removing such support. 
 
 Patches are welcome!
+
+## Installation
+
+```
+npm install jakecache
+```
 
 ## Get started
 
@@ -34,14 +45,16 @@ NETWORK:
 *
 ```
 
-1. Add ```<script src="jakecache.js"></script>```to your HTML.
+1. Include ``jakecache.js`` on your page, maybe via ```<script src="jakecache.js"></script>```
 2. Add ```<html manifest="app.jakecache">``` to your HTML.
-3. That's it!
+3. That's it! Your website is now Jake-enabled!
 
+## License
 
-### About this project
+MIT
+
+## About this project
 This is a project by [Kenneth Christiansen](https://twitter.com/kennethrohde) & [Kenneth Auchenberg](https://twitter.com/auchenberg) and a result of too much 🍺 and ☕.
-
 
 *Sarcasm may occur*
 
