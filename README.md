@@ -43,4 +43,6 @@ NETWORK:
 This is a project by [Kenneth Christiansen](https://twitter.com/kennethrohde) & [Kenneth Auchenberg](https://twitter.com/auchenberg) and a result of too much 🍺 and ☕.
 
 
-*Sarcasm may occur* 😂 :see_no_evil:
+*Sarcasm may occur*
+
+😂 :see_no_evil:
