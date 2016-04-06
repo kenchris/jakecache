@@ -10,9 +10,7 @@ Application Cache was a great step forward, but had several fundemental flaws th
 
 Service Worker is great, but if you ever had a look at it's API(s) you realize that they are complicated imperative JavaScript API's. These API's tend to scary many web developers who perfer a nice forgiving declarative approach. 
 
-So in order to fix the *too* complicated Service Worker API, we are super excited to introduce **JakeCache**. A declarative manifest-driven application cache for web applications implemented on top of ServiceWorker.
-
-*Sarcasm may occur* ;-)
+So in order to **fix** the **too** complicated Service Worker API, we are super excited to introduce **JakeCache**. A declarative manifest-driven application cache for web applications implemented on top of ServiceWorker.
 
 ### Polyfil 
 
@@ -39,3 +37,10 @@ NETWORK:
 1. Add ```<script src="jakecache.js"></script>```to your HTML.
 2. Add ```<html manifest="app.jakecache">``` to your HTML.
 3. That's it!
+
+
+### Project
+This is a project by [Kenneth Christiansen](https://twitter.com/kennethrohde) & [Kenneth Auchenberg](https://twitter.com/auchenberg) and a result of too much 🍺 and ☕
+
+
+*Sarcasm may occur in this project* � :see_no_evil:
