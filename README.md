@@ -39,8 +39,8 @@ NETWORK:
 3. That's it!
 
 
-### Project
-This is a project by [Kenneth Christiansen](https://twitter.com/kennethrohde) & [Kenneth Auchenberg](https://twitter.com/auchenberg) and a result of too much 🍺 and ☕
+### About this project
+This is a project by [Kenneth Christiansen](https://twitter.com/kennethrohde) & [Kenneth Auchenberg](https://twitter.com/auchenberg) and a result of too much 🍺 and ☕.
 
 
-*Sarcasm may occur in this project* � :see_no_evil:
+*Sarcasm may occur* 😂 :see_no_evil:
