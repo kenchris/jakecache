@@ -51,7 +51,7 @@ NETWORK:
 
 ## License
 
-MIT
+See [LICENSE.md](https://github.com/kenchris/jakecache/blob/master/LICENSE.md)
 
 ### About this project
 This is a project by [Kenneth Christiansen](https://twitter.com/kennethrohde) & [Kenneth Auchenberg](https://twitter.com/auchenberg) and a result of too much 🍺 and ☕.
