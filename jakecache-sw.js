@@ -1,16 +1,5 @@
 import {md5} from 'blueimp-md5'
 
-let location = window.location
-let fetch = window.fetch
-let caches = window.caches
-let cache = window.cache
-
-let Request = window.Request
-let TextDecoder = window.TextDecoder
-let URL = window.URL
-
-let self = this
-
 class JakeCacheManifest {
   constructor () {
     this._path = null
