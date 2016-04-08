@@ -5,7 +5,7 @@
 [![Build status](https://travis-ci.org/kenchris/jakecache.svg?branch=master)](https://travis-ci.org/kenchris/jakecache)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://github.com/feross/standard)
 
-![](https://raw.githubusercontent.com/kenchris/jakecache/master/jakecache.gif)
+![](https://raw.githubusercontent.com/kenchris/jakecache/master/.jakecache.gif)
 
 ## Why?
 
@@ -13,7 +13,7 @@ Buiding offline-first applications has been the ubiquius dream since the early d
 
 Application Cache was a great step forward, but had several fundemental flaws that were made famous by [Jake Archibald](https://twitter.com/jaffathecake)'s epic [Application Cache is a Douchebag](http://alistapart.com/article/application-cache-is-a-douchebag) article and [talk](https://www.youtube.com/watch?v=cR-TP6jOSQM). So Jake, [Alex Russel](https://twitter.com/slightlylate) and many others, have been busy working on the next generation of application caching API's which today are know as the [Service Worker Specification](https://github.com/slightlyoff/ServiceWorker).
 
-Service Worker is great, but if you ever had a look at it's API(s) you realize that they are complicated imperative JavaScript API's. These API's tend to scary many web developers who perfer a nice forgiving declarative approach. 
+Service Worker is great, but if you ever had a look at it's API(s) you realize that they are complicated imperative JavaScript API's. These API's tend to scary many web developers who perfer a nice forgiving declarative approach.
 
 So in order to **fix** the **too** complicated Service Worker API, we are super excited to introduce **JakeCache**. A declarative manifest-driven application cache for web applications implemented on top of ServiceWorker.
 
@@ -23,7 +23,7 @@ So in order to **fix** the **too** complicated Service Worker API, we are super 
 
 ### Polyfill
 
-JakeCache serves the additional purpose of being as compatible with the HTML5 Application Cache (aka AppCache) as we could make it and may serve as a polyfill in browsers removing such support. 
+JakeCache serves the additional purpose of being as compatible with the HTML5 Application Cache (aka AppCache) as we could make it and may serve as a polyfill in browsers removing such support.
 
 Patches are welcome!
 
