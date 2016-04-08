@@ -13,7 +13,7 @@ Building offline-first applications has been the ubiquius dream since the early 
 
 Application Cache was a great step forward, but had several fundemental flaws that were made famous by [Jake Archibald](https://twitter.com/jaffathecake)'s epic [Application Cache is a Douchebag](http://alistapart.com/article/application-cache-is-a-douchebag) article and [talk](https://www.youtube.com/watch?v=cR-TP6jOSQM). So Jake, [Alex Russel](https://twitter.com/slightlylate) and many others, have been busy working on the next generation of application caching API's which today are know as the [Service Worker Specification](https://github.com/slightlyoff/ServiceWorker).
 
-Service Worker is great, but if you ever had a look at it's API(s) you realize that they are complicated imperative JavaScript API's. These API's tend to scary many web developers who perfer a nice forgiving declarative approach.
+Service Worker is great, but if you ever had a look at it's API(s) you realize that they are complicated imperative JavaScript API's. These API's tend to scary many web developers who prefer a nice forgiving declarative approach.
 
 So in order to **fix** the **too** complicated Service Worker API, we are super excited to introduce **JakeCache**. A declarative manifest-driven application cache for web applications implemented on top of ServiceWorker.
 
