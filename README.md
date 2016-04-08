@@ -1,6 +1,6 @@
 # JakeCache
 
-🎂 Declarative manifest-driven app cache top of ServiceWorker.
+Declarative manifest-driven app cache top of ServiceWorker.
 
 [![Build status](https://travis-ci.org/kenchris/jakecache.svg?branch=master)](https://travis-ci.org/kenchris/jakecache)
 [![js-standard-style](https://img.shields.io/badge/code%20style-standard-brightgreen.svg?style=flat)](https://github.com/feross/standard)
