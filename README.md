@@ -21,7 +21,7 @@ So in order to **fix** the **too** complicated Service Worker API, we are super 
 
 😂
 
-### Polyfil 
+### Polyfill
 
 JakeCache serves the additional purpose of being as compatible with the HTML5 Application Cache (aka AppCache) as we could make it and may serve as a polyfill in browsers removing such support. 
 
@@ -35,7 +35,7 @@ npm install jakecache
 
 ## Get started
 
-1. Create a new JakeCache Manifest, `app.jakecache` and save it in your root:
+1. Create a new JakeCache Manifest, `app.jakecache` and save it in your root together with the `jakecache.js` file:
 ```
 CACHE MANIFEST
 # 2010-06-18:v2

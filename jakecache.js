@@ -66,6 +66,35 @@ class JakeCache extends PolyfilledEventTarget {
       return window.jakeCache;
     window.jakeCache = this;
 
+    let onload = () => {
+      if (document.readyState !== "complete") {
+        return;
+      }
+
+      let html = document.querySelector("html");
+      this.pathname = html.getAttribute("manifest");
+
+      if (this.pathname && 'serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/jakecache-sw.js').then(registration => {
+          console.log(`JakeCache installed for ${registration.scope}`);
+
+          if (registration.active) {
+            // Check whether we have a cache, or cache it (no reload enforced).
+            console.log("cache check");
+            registration.active.postMessage({ command: 'update', pathname: this.pathname });
+          }
+        }).catch(function(err) {
+          console.log('JakeCache installation failed: ', err);
+        });
+      }
+    }
+
+    if (document.readyState == "complete") {
+      onload();
+    } else {
+      document.onreadystatechange = onload;
+    }
+
     this[_status] = this.UNCACHED;
 
     navigator.serviceWorker.addEventListener('message', event => {
@@ -130,7 +159,7 @@ class JakeCache extends PolyfilledEventTarget {
     }
 
     navigator.serviceWorker.controller.postMessage(
-      { command: 'update' });
+      { command: 'update', pathname: this.pathname, options: { cache: "reload"} });
   }
 
   abort() {

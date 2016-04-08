@@ -4,6 +4,7 @@ class JakeCacheManifest {
   constructor() {
     this._path = null;
     this._hash = null;
+    this._isValid = false;
   }
 
   groupName() {
@@ -11,8 +12,12 @@ class JakeCacheManifest {
     return filename;
   }
 
-  fetchData(path, options) {
+  fetchData(path, options = {}) {
     this._path = path;
+
+    if (this._isValid && options.cache != "reload") {
+      return Promise.resolve(false);
+    }
 
     // http://html5doctor.com/go-offline-with-application-cache/
     return fetch(new Request(this._path, options)).then((response) => {
@@ -32,11 +37,12 @@ class JakeCacheManifest {
           });
 
           let hash = md5(decoded);
-          console.log("hashes " + this._hash + " " + hash);
-          if (hash === this._hash) {
+          if (this._hash && hash.toString() == this._hash.toString()) {
+            console.log("noupdate: " + hash);
             return resolve(false);
           }
           this._hash = hash;
+          console.log(`update: ${hash} (was: ${this._hash})`);
 
           let lines = decoded.split(/\r|\n/);
           let header = "cache"; // default.
@@ -65,7 +71,7 @@ class JakeCacheManifest {
             this._rawData[header].push(line);
           }
 
-          this.cache = [];
+          this.cache = ['/jakecache.js'];
           // Ignore different protocol
           for (let pathname of this._rawData.cache) {
             let path = new URL(pathname, location);
@@ -100,6 +106,7 @@ class JakeCacheManifest {
             }
           }
 
+          this._isValid = true;
           resolve(true);
         });
       });
@@ -110,7 +117,7 @@ class JakeCacheManifest {
 self.addEventListener('message', function(event) {
   switch (event.data.command) {
     case 'update':
-      update({ cache: "reload" });
+      update(event.data.pathname, event.data.options);
       break;
     case 'abort':
       postMessage({ type: "error", message: "Not implementable without cancellable promises." });
@@ -153,25 +160,40 @@ function swapCache() {
 }
 
 // 7.9.4
-function update(options = {}) {
+function update(pathname, options = {}) {
+  if (!pathname) {
+    console.log("No pathname!");
+    return Promise.reject();
+  }
+
   // *.2.2
   this.options = options;
-  this.cacheGroup = "test.manifest";
-  return new Promise((resolve, reject) => {
+  this.cacheGroup = pathname;
+
+  return caches.keys().then(cacheNames => {
+    this.uncached = !cacheNames.length;
+    console.log("uncached " + this.uncached);
+    return Promise.resolve(this.uncached);
+  }).then((uncached) => {
+    if (this.options.cache != "reload" && !uncached) {
+      // We have a cache and we are no doing an update check.
+      return Promise.reject();
+    }
+
     // *.2.4 and *.2.6
     if (cacheStatus == CacheStatus.CHECKING) {
       postMessage({ type: "checking" });
       postMessage({ type: "abort" });
-      reject();
+      return Promise.reject();
     }
     // *.2.4, *.2.5, *.2.6
     if (cacheStatus == CacheStatus.DOWNLOADING) {
       postMessage({ type: "checking" });
       postMessage({ type: "downloading" });
       postMessage({ type: "abort" });
-      reject();
+      return Promise.reject();
     }
-    resolve();
+    return Promise.resolve();
   }).then(() => {
     // *.2.7 and *.2.8
     cacheStatus = CacheStatus.CHECKING;
@@ -276,10 +298,18 @@ function update(options = {}) {
 }
 
 self.addEventListener('install', function(event) {
-  event.waitUntil(update);
+  event.waitUntil(self.skipWaiting());
+});
+
+self.addEventListener('activate', function(event) {
+  event.waitUntil(self.clients.claim());
 });
 
 self.addEventListener('fetch', function(event) {
+  if (cacheStatus == CacheStatus.UNCACHED) {
+    return fetch(event.request);
+  }
+
   let url = new URL(event.request.url);
 
   // Ignore non-GET and different schemes.
