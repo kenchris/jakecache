@@ -4,7 +4,8 @@
   "description": "Declarative manifest-driven app cache top of ServiceWorker",
   "main": "jakecache.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "node build.js"
   },
   "repository": {
     "type": "git",
@@ -15,18 +16,12 @@
     "appcache"
   ],
   "author": "",
-  "license": "ISC",
+  "license": "See License in LICENSE.md",
   "bugs": {
     "url": "https://github.com/kenchris/jakecache/issues"
   },
   "homepage": "https://github.com/kenchris/jakecache#readme",
-  "dependencies": {
-    "blueimp-md5": "^2.3.0"
-  },
   "devDependencies": {
-      "grunt": "^0.4.5",
-      "babelify": "^6.1.0",
-      "grunt-browserify": "^3.8.0",
-      "grunt-contrib-watch": "^0.6.1"
+    "rollup": "^0.25.8"
   }
 }
