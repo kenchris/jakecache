@@ -7,7 +7,7 @@
     "dist/jakecache-sw.js"
   ],
   "scripts": {
-    "build": "node build.js",
+    "build": "node scripts/build.js",
     "test": "node test/index.js",
     "prepublish": "npm build"
   },
