@@ -1,4 +1,4 @@
-self.importScripts('third_party/md5/md5.min.js');
+import {md5} from 'blueimp-md5'
 
 let location = window.location
 let fetch = window.fetch
