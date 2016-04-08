@@ -195,4 +195,4 @@ class JakeCache extends PolyfilledEventTarget {
   }
 }
 
-JakeCache()
+new JakeCache()
