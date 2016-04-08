@@ -4,7 +4,7 @@
   "description": "Declarative manifest-driven app cache top of ServiceWorker",
   "main": "jakecache.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "node test/index.js",
     "build": "node build.js"
   },
   "repository": {
@@ -16,16 +16,19 @@
     "appcache"
   ],
   "author": "Kenneth Rohde Christiansen <kenneth.christiansen@gmail.com>",
-  "contributors" : [{
-    "name": "Kenneth Auchenberg",
-    "email": "kenneth@auchenberg.dk"
-  }],
+  "contributors": [
+    {
+      "name": "Kenneth Auchenberg",
+      "email": "kenneth@auchenberg.dk"
+    }
+  ],
   "license": "See License in LICENSE.md",
   "bugs": {
     "url": "https://github.com/kenchris/jakecache/issues"
   },
   "homepage": "https://github.com/kenchris/jakecache#readme",
   "devDependencies": {
-    "rollup": "^0.25.8"
+    "rollup": "^0.25.8",
+    "tape": "^4.5.1"
   }
 }
