@@ -2,10 +2,14 @@
   "name": "jakecache",
   "version": "1.0.0",
   "description": "Declarative manifest-driven app cache top of ServiceWorker",
-  "main": "jakecache.js",
+  "files": [
+    "dist/jakecache.js",
+    "dist/jakecache-sw.js"
+  ],
   "scripts": {
+    "build": "node build.js",
     "test": "node test/index.js",
-    "build": "node build.js"
+    "prepublish": "npm build"
   },
   "repository": {
     "type": "git",
