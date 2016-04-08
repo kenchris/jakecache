@@ -121,7 +121,7 @@ class JakeCacheManifest {
 self.addEventListener('message', function (event) {
   switch (event.data.command) {
     case 'update':
-      update(event.data.pathname, event.data.options)
+      update.call(this, event.data.pathname, event.data.options)
       break
     case 'abort':
       postMessage({ type: 'error', message: 'Not implementable without cancellable promises.' })
