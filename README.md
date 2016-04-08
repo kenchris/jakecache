@@ -35,7 +35,7 @@ npm install jakecache
 
 ## Get started
 
-1. Create a new JakeCache Manifest, `app.jakecache` and save it in your root together with the `jakecache.js` file:
+1. Create a new JakeCache Manifest, `app.manifest` and save it in your root together with the `jakecache.js` file:
 ```
 CACHE MANIFEST
 # 2010-06-18:v2
@@ -50,7 +50,7 @@ NETWORK:
 ```
 
 1. Include ``jakecache.js`` on your page, maybe via ```<script src="jakecache.js"></script>```
-2. Add ```<html manifest="app.jakecache">``` to your HTML.
+2. Add ```<html manifest="app.manifest">``` to your HTML.
 3. That's it! Your website is now Jake-enabled!
 
 ## License
