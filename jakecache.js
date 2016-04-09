@@ -63,7 +63,7 @@ const _status = Symbol('status')
 
 class JakeCache extends PolyfilledEventTarget {
   constructor () {
-    super(['bort', 'cached', 'checking',
+    super(['abort', 'cached', 'checking',
            'downloading', 'error', 'obsolete',
            'progress', 'updateready', 'noupdate'])
 
