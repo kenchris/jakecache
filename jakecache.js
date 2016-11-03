@@ -71,6 +71,10 @@ class JakeCache extends PolyfilledEventTarget {
       return window.jakeCache
     }
     window.jakeCache = this
+    
+    if (('serviceWorker' in navigator) === false) {
+      return
+    }
 
     let onload = () => {
       if (document.readyState !== 'complete') {
