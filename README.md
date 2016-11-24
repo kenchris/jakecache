@@ -29,8 +29,8 @@ Patches are welcome!
 
 ## Installation
 
-```
-npm install jakecache
+```bash
+npm install jakecache --save
 ```
 
 ## Get started
