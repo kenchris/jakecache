@@ -76,7 +76,7 @@ class JakeCacheManifest {
             this._rawData[header].push(line)
           }
 
-          this.cache = ['/jakecache.js']
+          this.cache = ['jakecache.js']
           // Ignore different protocol
           for (let pathname of this._rawData.cache) {
             let path = new URL(pathname, location)
