@@ -6,6 +6,7 @@ class JakeCacheManifest {
     this._path = null
     this._hash = null
     this._isValid = false
+    this._fetchOptions = { credentials: "same-origin" }
   }
 
   groupName () {
@@ -21,7 +22,7 @@ class JakeCacheManifest {
     }
 
     // http://html5doctor.com/go-offline-with-application-cache/
-    return fetch(new Request(this._path, options)).then((response) => {
+    return fetch(new Request(this._path, options), this._fetchOptions).then((response) => {
       if (response.type === 'opaque' || response.status === 404 || response.status === 410) {
         return Promise.reject()
       }
@@ -234,7 +235,7 @@ function update (pathname, options = {}) {
 
     return Promise.all(this.requests.map(request => {
       // Manual fetch to emulate appcache behavior.
-      return fetch(request).then(response => {
+      return fetch(request, this._fetchOptions).then(response => {
         cacheStatus = CacheStatus.PROGRESS
         postMessage({
           type: 'progress',
