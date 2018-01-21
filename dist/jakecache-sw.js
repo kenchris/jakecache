@@ -270,6 +270,7 @@ class JakeCacheManifest {
     this._path = null
     this._hash = null
     this._isValid = false
+    this._fetchOptions = { credentials: "same-origin" }
   }
 
   groupName () {
@@ -285,27 +286,20 @@ class JakeCacheManifest {
     }
 
     // http://html5doctor.com/go-offline-with-application-cache/
-    return fetch(new Request(this._path, options)).then((response) => {
+    return fetch(new Request(this._path, options), this._fetchOptions).then((response) => {
       if (response.type === 'opaque' || response.status === 404 || response.status === 410) {
         return Promise.reject()
       }
 
-      var reader = response.body.getReader()
-      var decoded = ''
-      var decoder = new TextDecoder()
       this._rawData = {
         cache: [],
         fallback: [],
         network: []
       }
 
-      return reader.read().then((result) => {
+      return response.text().then((result) => {
         return new Promise((resolve, reject) => {
-          decoded += decoder.decode(result.value || new Uint8Array(), {
-            stream: !result.done
-          })
-
-          let hash = md5(decoded)
+          let hash = md5(result)
           if (this._hash && hash.toString() === this._hash.toString()) {
             console.log('noupdate: ' + hash)
             return resolve(false)
@@ -313,7 +307,7 @@ class JakeCacheManifest {
           this._hash = hash
           console.log(`update: ${hash} (was: ${this._hash})`)
 
-          let lines = decoded.split(/\r|\n/)
+          let lines = result.split(/\r|\n/)
           let header = 'cache' // default.
 
           let firstLine = lines.shift()
@@ -340,7 +334,7 @@ class JakeCacheManifest {
             this._rawData[header].push(line)
           }
 
-          this.cache = ['/jakecache.js']
+          this.cache = ['jakecache.js']
           // Ignore different protocol
           for (let pathname of this._rawData.cache) {
             let path = new URL(pathname, location)
@@ -505,7 +499,7 @@ function update (pathname, options = {}) {
 
     return Promise.all(this.requests.map(request => {
       // Manual fetch to emulate appcache behavior.
-      return fetch(request).then(response => {
+      return fetch(request, manifest._fetchOptions).then(response => {
         cacheStatus = CacheStatus.PROGRESS
         postMessage({
           type: 'progress',
