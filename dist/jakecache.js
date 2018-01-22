@@ -65,7 +65,7 @@ const _status = Symbol('status')
 
 class JakeCache extends PolyfilledEventTarget {
   constructor () {
-    super(['bort', 'cached', 'checking',
+    super(['abort', 'cached', 'checking',
            'downloading', 'error', 'obsolete',
            'progress', 'updateready', 'noupdate'])
 
@@ -73,6 +73,10 @@ class JakeCache extends PolyfilledEventTarget {
       return window.jakeCache
     }
     window.jakeCache = this
+    
+    if (('serviceWorker' in navigator) === false) {
+      return
+    }
 
     let onload = () => {
       if (document.readyState !== 'complete') {
@@ -83,7 +87,7 @@ class JakeCache extends PolyfilledEventTarget {
       this.pathname = html.getAttribute('manifest')
 
       if (this.pathname && 'serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/jakecache-sw.js').then(registration => {
+        navigator.serviceWorker.register('jakecache-sw.js').then(registration => {
           console.log(`JakeCache installed for ${registration.scope}`)
 
           if (registration.active) {
