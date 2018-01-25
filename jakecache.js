@@ -97,7 +97,7 @@ class JakeCache extends PolyfilledEventTarget {
             })
           }
         }).catch(function (err) {
-          console.log('JakeCache installation failed: ', err)
+          console.log(`JakeCache installation failed: ${err}`)
         })
       }
     }
