@@ -742,12 +742,10 @@ self.addEventListener("fetch", function(event) {
     cacheStatus = CacheStatus.CACHED;
   }
 
- if (!event.request.url.startsWith(self.location.origin)) {
-    // External request, or POST, ignore
-    return event.respondWith(fetch(event.request));
-  }
-
   if (cacheStatus === CacheStatus.UNCACHED) {
+    if (event.request.cache === 'only-if-cached' && event.request.mode !== 'same-origin') {
+      return event.respondWith(Promise.resolve());
+    }
     return fetch(event.request);
   }
 
@@ -762,7 +760,10 @@ self.addEventListener("fetch", function(event) {
     return;
   }
 
-  
+  if (!event.request.url.startsWith(self.location.origin)) {
+    // External request, or POST, ignore
+    return event.respondWith(fetch(event.request));
+  }
 
   // FIXME TEST: Get data from IndexedDB instead.
   let mnfstPromise = manifest
