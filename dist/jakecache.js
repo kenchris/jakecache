@@ -158,7 +158,7 @@ class JakeCache extends PolyfilledEventTarget {
           break;
         case "progress":
           let ev = new ProgressEvent("progress", event.data);
-          ev.url = event.data.srcElement;
+          ev.url = event.data.url;
           this.dispatchEvent(ev);
           break;
         case "obsolete":

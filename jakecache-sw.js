@@ -254,7 +254,7 @@ function update(pathname, options = {}) {
   let nextManifest = new JakeCacheManifest();
 
   // *.2.2
-  this.options = options;
+  (this || self).options = options;
 
   return idbKeyval.get('current', manifestStore).then(mnfstData => {
       if(!mnfstData){
