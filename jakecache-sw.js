@@ -16,7 +16,7 @@ class JakeCacheManifest {
       network: []
     };
 
-    if(data){
+    if (data) {
       this.restoreManifest(data);
     }
   }
@@ -31,26 +31,25 @@ class JakeCacheManifest {
     return {
       cacheName: this.cacheName(),
       path: this._path,
-      hash : this._hash,
-      isValid : this._isValid,
+      hash: this._hash,
+      isValid: this._isValid,
       rawData: this._rawData
     };
   }
 
   restoreManifest(manifestData) {
-    if(!manifestData){
+    if (!manifestData) {
       this._isValid = false;
       return;
     }
     this._path = manifestData.path;
     this._hash = manifestData.hash;
-    this._rawData = manifestData.rawData
+    this._rawData = manifestData.rawData;
 
     this.restoreCache();
   }
 
   restoreCache() {
-    
     this.cache = ["jakecache.js"];
     // Ignore different protocol
     for (let pathname of this._rawData.cache) {
@@ -87,17 +86,15 @@ class JakeCacheManifest {
     }
 
     this._isValid = true;
-    
   }
 
-  
   pathName() {
     return this._path;
   }
 
   cacheName() {
     let version = this._rawData.version;
-    return version + '_' + this._hash;
+    return version + "_" + this._hash;
   }
 
   fetchData(path, options = {}) {
@@ -119,7 +116,7 @@ class JakeCacheManifest {
         }
 
         this._hash = options.hash ? options.hash : this._hash;
-        
+
         return response.text().then(result => {
           return new Promise((resolve, reject) => {
             let hash = md5(result);
@@ -171,7 +168,7 @@ class JakeCacheManifest {
             if (!versionFound) {
               this._rawData.version = "" + new Date().getTime();
             }
-            
+
             this.restoreCache();
             resolve(true);
           });
@@ -222,26 +219,32 @@ function postMessage(msg) {
 }
 
 function swapCache() {
-  idbKeyval.get('current', manifestStore).then(mnfstData => {
-      if(mnfstData){
+  idbKeyval
+    .get("current", manifestStore)
+    .then(mnfstData => {
+      if (mnfstData) {
         return caches.delete(mnfstData.cacheName);
       }
-  }).then(() => {
-      return idbKeyval.get('next', manifestStore)
-  }).then(mnfstData => {
-    if(mnfstData){
-      manifest = new JakeCacheManifest(mnfstData);
+    })
+    .then(() => {
+      return idbKeyval.get("next", manifestStore);
+    })
+    .then(mnfstData => {
+      if (mnfstData) {
+        manifest = new JakeCacheManifest(mnfstData);
 
-      return idbKeyval.set('current', mnfstData, manifestStore);
-    }else{
-      cacheStatus = CacheStatus.UNCACHED;
-    }
-  }).then(() => {
-    return idbKeyval.del('next', manifestStore);
-  }).then(_ => {
-    cacheStatus = CacheStatus.IDLE;
-    postMessage({ type: "updated" });
-  });
+        return idbKeyval.set("current", mnfstData, manifestStore);
+      } else {
+        cacheStatus = CacheStatus.UNCACHED;
+      }
+    })
+    .then(() => {
+      return idbKeyval.del("next", manifestStore);
+    })
+    .then(_ => {
+      cacheStatus = CacheStatus.IDLE;
+      postMessage({ type: "updated" });
+    });
 }
 
 // 7.9.4
@@ -250,47 +253,48 @@ function update(pathname, options = {}) {
     console.log("No pathname!");
     return Promise.reject();
   }
-  
+
   let nextManifest = new JakeCacheManifest();
 
   // *.2.2
-  (this || self).options = options;
+  self.options = options;
 
-  return idbKeyval.get('current', manifestStore).then(mnfstData => {
-      if(!mnfstData){
+  return idbKeyval
+    .get("current", manifestStore)
+    .then(mnfstData => {
+      if (!mnfstData) {
         manifest = null;
-        this.uncached = true;
+        self.uncached = true;
         cacheStatus = CacheStatus.UNCACHED;
-        console.log("uncached " + this.uncached);
-        return Promise.resolve(this.uncached);
-      }else{
+        console.log("uncached " + self.uncached);
+        return Promise.resolve(self.uncached);
+      } else {
         manifest = new JakeCacheManifest(mnfstData);
-        this.options = this.options || {};
-        this.options.hash = manifest.hash();
+        self.options = self.options || {};
+        self.options.hash = manifest.hash();
       }
 
       return caches.open(mnfstData.cacheName).then(cache => {
-        if(!cache){
+        if (!cache) {
           manifest = null;
-          this.uncached = true;
+          self.uncached = true;
           cacheStatus = CacheStatus.UNCACHED;
-          console.log("uncached " + this.uncached);
-          return Promise.resolve(this.uncached);
+          console.log("uncached " + self.uncached);
+          return Promise.resolve(self.uncached);
         }
 
         return cache.keys().then(keyData => {
-          this.uncached = !keyData || !keyData.length;
-          if(this.uncached){
+          self.uncached = !keyData || !keyData.length;
+          if (self.uncached) {
             manifest = null;
             cacheStatus = CacheStatus.UNCACHED;
           }
-          console.log("uncached " + this.uncached);
-          return Promise.resolve(this.uncached);
-        })
-      })
+          console.log("uncached " + self.uncached);
+          return Promise.resolve(self.uncached);
+        });
+      });
     })
     .then(uncached => {
-      
       if (cacheStatus === CacheStatus.UPDATEREADY) {
         postMessage({ type: "updateready" });
         postMessage({ type: "abort" });
@@ -317,9 +321,8 @@ function update(pathname, options = {}) {
       postMessage({ type: "checking" });
 
       // FIXME: *.6: Fetch manifest, mark obsolete if fails.
-     
 
-      return nextManifest.fetchData(pathname, this.options).catch(err => {
+      return nextManifest.fetchData(pathname, self.options).catch(err => {
         cacheStatus = CacheStatus.OBSOLETE;
         postMessage({ type: "obsolete" });
         // FIXME: *.7: Error for each existing entry.
@@ -327,10 +330,9 @@ function update(pathname, options = {}) {
         postMessage({ type: "idle" });
         return Promise.reject(err);
       });
-
-      
-    }).then(modified => {
-      this.modified = modified;
+    })
+    .then(modified => {
+      self.modified = modified;
       // *.2: If cache group already has an application cache in it, then
       // this is an upgrade attempt. Otherwise, this is a cache attempt.
       return caches.keys().then(cacheNames => {
@@ -338,34 +340,34 @@ function update(pathname, options = {}) {
       });
     })
     .then(upgrade => {
-      this.upgrade = upgrade;
-      if (this.upgrade && !this.modified) {
+      self.upgrade = upgrade;
+      if (self.upgrade && !self.modified) {
         cacheStatus = CacheStatus.IDLE;
         postMessage({ type: "noupdate" });
         return Promise.reject();
       }
 
       // Appcache is no-cors by default.
-      this.requests = nextManifest.cache.map(url => {
+      self.requests = nextManifest.cache.map(url => {
         return new Request(url, { mode: "no-cors" });
       });
 
       cacheStatus = CacheStatus.DOWNLOADING;
       postMessage({ type: "downloading" });
 
-      this.loaded = 0;
-      this.total = this.requests.length;
+      self.loaded = 0;
+      self.total = self.requests.length;
 
       return Promise.all(
-        this.requests.map(request => {
+        self.requests.map(request => {
           // Manual fetch to emulate appcache behavior.
           return fetch(request, nextManifest._fetchOptions).then(response => {
             cacheStatus = CacheStatus.PROGRESS;
             postMessage({
               type: "progress",
               lengthComputable: true,
-              loaded: ++this.loaded,
-              total: this.total,
+              loaded: ++self.loaded,
+              total: self.total,
               url: request.url.toString()
             });
 
@@ -397,9 +399,10 @@ function update(pathname, options = {}) {
           });
         })
       );
-    }).then(responses => {
-      this.responses = responses.filter(response => response);    
-      return Promise.resolve(this.responses);
+    })
+    .then(responses => {
+      self.responses = responses.filter(response => response);
+      return Promise.resolve(self.responses);
     })
     .then(responses => {
       console.log("Adding to cache " + nextManifest.cacheName());
@@ -411,18 +414,23 @@ function update(pathname, options = {}) {
               return cache.put(self.requests[index], response);
             })
           );
-        }).then(_ => {
-          let manifestVersion = 'next';
-          if(!this.upgrade){
+        })
+        .then(_ => {
+          let manifestVersion = "next";
+          if (!self.upgrade) {
             manifest = nextManifest;
-            manifestVersion = 'current';
+            manifestVersion = "current";
           }
 
-          return idbKeyval.set(manifestVersion, nextManifest.manifestData(), manifestStore);
+          return idbKeyval.set(
+            manifestVersion,
+            nextManifest.manifestData(),
+            manifestStore
+          );
         });
-    }).then(_ => { 
-      if (this.upgrade) 
-      {
+    })
+    .then(_ => {
+      if (self.upgrade) {
         cacheStatus = CacheStatus.UPDATEREADY;
         postMessage({ type: "updateready" });
       } else {
@@ -440,32 +448,38 @@ function update(pathname, options = {}) {
 }
 
 self.addEventListener("install", function(event) {
-  event.waitUntil(
-   self.skipWaiting()
-   );
+  event.waitUntil(self.skipWaiting());
 });
 
 self.addEventListener("activate", function(event) {
-
   event.waitUntil(
-    idbKeyval.get('current', manifestStore).then(mnfstData => {
-      if(mnfstData){
-        manifest = new JakeCacheManifest(mnfstData);
-        cacheStatus = CacheStatus.CACHED;
-      }
-      return Promise.resolve(manifest);
-    }).then(mnfst => {
-      if(mnfst){
-        return update(mnfst.pathName(), { cache : "reload" });
-      }
-      return Promise.resolve();
-    }).then(self.clients.claim())
-    );
+    idbKeyval
+      .get("current", manifestStore)
+      .then(mnfstData => {
+        if (mnfstData) {
+          manifest = new JakeCacheManifest(mnfstData);
+          cacheStatus = CacheStatus.CACHED;
+        }
+        return Promise.resolve(manifest);
+      })
+      .then(mnfst => {
+        if (mnfst) {
+          return update(mnfst.pathName(), { cache: "reload" });
+        }
+        return Promise.resolve();
+      })
+      .then(self.clients.claim())
+  );
 });
 
 self.addEventListener("fetch", function(event) {
-  if(manifest && manifest.isValid() && cacheStatus === CacheStatus.UNCACHED){
+  if (manifest && manifest.isValid() && cacheStatus === CacheStatus.UNCACHED) {
     cacheStatus = CacheStatus.CACHED;
+  }
+
+ if (!event.request.url.startsWith(self.location.origin)) {
+    // External request, or POST, ignore
+    return event.respondWith(fetch(event.request));
   }
 
   if (cacheStatus === CacheStatus.UNCACHED) {
@@ -475,15 +489,15 @@ self.addEventListener("fetch", function(event) {
   let url = new URL(event.request.url);
 
   // Ignore non-GET and different schemes.
-  if (!event.request.url.startsWith(self.location.origin) || 
-      event.request.method !== "GET" || url.scheme !== location.scheme) {
+  if (
+    !event.request.url.startsWith(self.location.origin) ||
+    event.request.method !== "GET" ||
+    url.scheme !== location.scheme
+  ) {
     return;
   }
 
-  // if (!event.request.url.startsWith(self.location.origin)) {
-  //   // External request, or POST, ignore
-  //   return void event.respondWith(fetch(event.request));
-  // }
+  
 
   // FIXME TEST: Get data from IndexedDB instead.
   let mnfstPromise = manifest
@@ -493,65 +507,63 @@ self.addEventListener("fetch", function(event) {
           manifest = new JakeCacheManifest(mnfstData);
         }
         return manifest;
-    });
+      });
 
-    function checkCache(mnfst)
-    {
-        return caches
-            .open(mnfst.cacheName())
-            .then(function (cache) {
-                if(!cache)
-                {
-                  throw Error('Cache not found');
-                }
+  function checkCache(mnfst) {
+    return caches
+      .open(mnfst.cacheName())
+      .then(function(cache) {
+        if (!cache) {
+          throw Error("Cache not found");
+        }
 
-                return cache.match(event.request).then(response => {
-                    // Cache always wins.
-                    if (response) {
-                        return response;
+        return cache.match(event.request).then(response => {
+          // Cache always wins.
+          if (response) {
+            return response;
+          }
+
+          // Fallbacks consult network, and falls back on failure.
+          for (let [path, fallback] of mnfst.fallback) {
+            if (url.href.indexOf(path) === 0) {
+              return fetch(event.request)
+                .then(response => {
+                  // Same origin only.
+                  if (new URL(response.url).origin !== location.origin) {
+                    throw Error();
+                  }
+
+                  if (response.type !== "opaque") {
+                    if (response.status < 200 || response.status >= 300) {
+                      throw Error();
                     }
-
-                    // Fallbacks consult network, and falls back on failure.
-                    for (let [path, fallback] of mnfst.fallback) {
-                        if (url.href.indexOf(path) === 0) {
-                            return fetch(event.request)
-                                .then(response => {
-                                    // Same origin only.
-                                    if (new URL(response.url).origin !== location.origin) {
-                                        throw Error();
-                                    }
-
-                                    if (response.type !== "opaque") {
-                                        if (response.status < 200 || response.status >= 300) {
-                                            throw Error();
-                                        }
-                                    }
-                                })
-                                .catch(_ => {
-                                    return cache.match(fallback);
-                                });
-                        }
-                    }
-
-                    if (mnfst.allowNetworkFallback) {
-                        return fetch(event.request);
-                    }
-
-                    return response; // failure.
+                  }
+                })
+                .catch(_ => {
+                  return cache.match(fallback);
                 });
-            })
-            .catch(err => {
-                if (err) {
-                    postMessage({ type: "error" }, err);
-                    console.log(err);
-                }
-                //error with cache remove current manifest
-                manifest = null;
-                idbKeyval.del("current", manifestStore);
-                cacheStatus = CacheStatus.UNCACHED;
-                return fetch(event.request);
-            });
-    }
+            }
+          }
+
+          if (mnfst.allowNetworkFallback) {
+            return fetch(event.request);
+          }
+
+          return response; // failure.
+        });
+      })
+      .catch(err => {
+        if (err) {
+          postMessage({ type: "error" }, err);
+          console.log(err);
+        }
+        //error with cache remove current manifest
+        manifest = null;
+        idbKeyval.del("current", manifestStore);
+        cacheStatus = CacheStatus.UNCACHED;
+        return fetch(event.request);
+      });
+  }
 
   event.respondWith(
     mnfstPromise
