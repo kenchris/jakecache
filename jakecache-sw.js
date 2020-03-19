@@ -477,27 +477,18 @@ self.addEventListener("fetch", function(event) {
     cacheStatus = CacheStatus.CACHED;
   }
 
-  if (cacheStatus === CacheStatus.UNCACHED) {
-    if (event.request.cache === 'only-if-cached' && event.request.mode !== 'same-origin') {
-      return event.respondWith(Promise.resolve());
-    }
-    return fetch(event.request);
-  }
-
   let url = new URL(event.request.url);
 
   // Ignore non-GET and different schemes.
   if (
+    cacheStatus === CacheStatus.UNCACHED ||
+    (event.request.cache === "only-if-cached" &&
+      event.request.mode !== "same-origin") ||
     !event.request.url.startsWith(self.location.origin) ||
     event.request.method !== "GET" ||
     url.scheme !== location.scheme
   ) {
     return;
-  }
-
-  if (!event.request.url.startsWith(self.location.origin)) {
-    // External request, or POST, ignore
-    return event.respondWith(fetch(event.request));
   }
 
   // FIXME TEST: Get data from IndexedDB instead.
