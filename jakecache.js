@@ -98,14 +98,28 @@ class JakeCache extends PolyfilledEventTarget {
           .register("jakecache-sw.js")
           .then(registration => {
             console.log(`JakeCache installed for ${registration.scope}`);
+            if (registration.waiting) {
+              console.log("waiting", registration.waiting);
+              registration.waiting.addEventListener(
+                "statechange",
+                onStateChange("waiting")
+              );
+            }
+
+            if (registration.installing) {
+              console.log("installing", registration.installing);
+              registration.installing.addEventListener(
+                "statechange",
+                onStateChange("installing")
+              );
+            }
 
             if (registration.active) {
-              // Check whether we have a cache, or cache it (no reload enforced).
-              console.log("cache check");
-              registration.active.postMessage({
-                command: "update",
-                pathname: this.pathname
-              });
+              console.log("active", registration.active);
+              registration.active.addEventListener(
+                "statechange",
+                onStateChange("active")
+              );
             }
           })
           .catch(err => {
@@ -113,6 +127,29 @@ class JakeCache extends PolyfilledEventTarget {
           });
       }
     };
+
+    function onStateChange(from) {
+      return function(e) {
+        console.log(
+          "statechange initial state ",
+          from,
+          "changed to",
+          e.target.state
+        );
+        if (e.target.state === "activated") {
+          // Check whether we have a cache, or cache it (no reload enforced).
+          console.log("cache check for update");
+
+          let html = document.querySelector("html");
+          this.pathname = html.getAttribute("manifest");
+
+          navigator.serviceWorker.controller.postMessage({
+            command: "update",
+            pathname: this.pathname
+          });
+        }
+      };
+    }
 
     if (document.readyState === "complete") {
       onload();
