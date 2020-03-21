@@ -99,7 +99,7 @@ class JakeCache extends PolyfilledEventTarget {
           .then(registration => {
             console.log(`JakeCache installed for ${registration.scope}`);
             if (registration.waiting) {
-              console.log("waiting", registration.waiting);
+              console.log("JakeCache waiting", registration.waiting);
               registration.waiting.addEventListener(
                 "statechange",
                 onStateChange("waiting")
@@ -107,7 +107,7 @@ class JakeCache extends PolyfilledEventTarget {
             }
 
             if (registration.installing) {
-              console.log("installing", registration.installing);
+              console.log("JakeCache installing", registration.installing);
               registration.installing.addEventListener(
                 "statechange",
                 onStateChange("installing")
@@ -115,11 +115,18 @@ class JakeCache extends PolyfilledEventTarget {
             }
 
             if (registration.active) {
-              console.log("active", registration.active);
+              console.log("JakeCache active", registration.active);
               registration.active.addEventListener(
                 "statechange",
                 onStateChange("active")
               );
+
+              // Check whether we have a cache, or cache it (no reload enforced).
+              console.log("JakeCache cache check");
+              registration.active.postMessage({
+                command: "update",
+                pathname: this.pathname
+              });
             }
           })
           .catch(err => {
