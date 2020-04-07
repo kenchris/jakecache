@@ -1,6 +1,5 @@
 'use strict';
 
-// actual sources https://github.com/segios/jakecache
 
 import { md5 } from './lib/md5'
 

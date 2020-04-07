@@ -1,6 +1,6 @@
 'use strict';
 
-// actual sources https://github.com/segios/jakecache
+
 
 const _eventHandlers = Symbol("eventHandlers");
 
