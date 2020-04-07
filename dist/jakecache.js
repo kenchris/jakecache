@@ -75,7 +75,8 @@ class JakeCache extends PolyfilledEventTarget {
       "progress",
       "updateready",
       "updated",
-      "noupdate"
+      "noupdate",
+      "sw-not-attached"
     ]);
 
     if (window.jakeCache) {
@@ -87,40 +88,78 @@ class JakeCache extends PolyfilledEventTarget {
       return;
     }
 
+    const manifestAttr = "manifest";
+
     let onload = () => {
       if (document.readyState !== "complete") {
         return;
       }
-
+        
       let html = document.querySelector("html");
-      this.pathname = html.getAttribute("manifest");
+        this.pathname = html.getAttribute(manifestAttr);
+        
+        if (this.pathname && "serviceWorker" in navigator) {
 
-      if (this.pathname && "serviceWorker" in navigator) {
+            var self = this;
+
         navigator.serviceWorker
-          .register("jakecache-sw.js")
-          .then(registration => {
-            console.log(`JakeCache installed for ${registration.scope}`);
-
-            if (registration.active) {
-              // Check whether we have a cache, or cache it (no reload enforced).
-              console.log("cache check");
-              registration.active.postMessage({
-                command: "update",
-                pathname: this.pathname
-              });
-            }
-          })
-          .catch(err => {
-            console.log(`JakeCache installation failed: ${err}`);
-          });
+            .register("jakecache-sw.js")
+            .then(function (reg) {
+                    if (reg.installing) {
+                        console.log('JakeCache Service worker installing');
+                    } else if (reg.waiting) {
+                        console.log('JakeCache Service worker installed');
+                    } else if (reg.active) {
+                        console.log('JakeCache Service worker active');
+                }
+                return reg;
+                })
+            .then(navigator.serviceWorker.ready)
+            .then(function (registration) {
+                console.log('JakeCache service worker registered');
+                if (registration.active) {
+                    registration.active.postMessage({
+                        command: "update",
+                        pathname: self.pathname
+                    });
+                }
+            })
+            .catch(function (error) {
+                console.error('JakeCache error when registering service worker', error, arguments);
+            });
       }
-    };
+      };
 
     if (document.readyState === "complete") {
       onload();
     } else {
       document.onreadystatechange = onload;
     }
+
+      this.checkIfServiceWorkerAttachedToPage = function checkIfServiceWorkerAttachedToPage()
+      {
+          console.log('JakeCache checking for Service Fetch');
+          fetch(`sw-fetch-test`)
+              .then(response => {
+                  if (!response.ok) {
+                      throw Error(response.statusText);
+                  }
+                  return response;
+              })
+              .then(response => response.json())
+              .then((data) => {
+                  if (data.result !== 'ok') {
+                      throw Error("Invalid response");
+                  }
+              })
+              .catch(err => {
+                  console.log('JakeCache Service worker not attached !!!');
+
+                  {
+                      this.dispatchEvent(new CustomEvent("sw-not-attached"));
+                  }
+              });
+      };
 
     this[_status] = this.UNCACHED;
 
@@ -139,6 +178,7 @@ class JakeCache extends PolyfilledEventTarget {
         case "cached":
           this[_status] = this.IDLE;
           this.dispatchEvent(new CustomEvent("cached"));
+          this.checkIfServiceWorkerAttachedToPage();
           break;
         case "downloading":
           this[_status] = this.DOWNLOADING;
@@ -154,7 +194,9 @@ class JakeCache extends PolyfilledEventTarget {
           break;
         case "noupdate":
           this[_status] = this.IDLE;
-          this.dispatchEvent(new CustomEvent("noupdate"));
+              this.dispatchEvent(new CustomEvent("noupdate"));
+              console.log('JakeCache noupdate event');
+          this.checkIfServiceWorkerAttachedToPage();
           break;
         case "progress":
           let ev = new ProgressEvent("progress", event.data);
@@ -167,6 +209,9 @@ class JakeCache extends PolyfilledEventTarget {
           break;
         case "error":
           this.dispatchEvent(new ErrorEvent("error", event.data));
+
+              // try to update 
+              this.update();
           break;
       }
     });
@@ -198,15 +243,16 @@ class JakeCache extends PolyfilledEventTarget {
   }
 
   update() {
-    if (false) {}
 
-    navigator.serviceWorker.controller.postMessage({
-      command: "update",
-      pathname: this.pathname,
-      options: {
-        cache: "reload"
+      if (navigator.onLine && navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({
+              command: "update",
+              pathname: this.pathname,
+              options: {
+                  cache: "reload"
+              }
+          });
       }
-    });
   }
 
   abort() {
@@ -224,6 +270,7 @@ class JakeCache extends PolyfilledEventTarget {
         "there is no newer application cache to swap to."
       );
     }
+
     navigator.serviceWorker.controller.postMessage({
       command: "swapCache"
     });
