@@ -125,10 +125,12 @@ NETWORK:
 ```
 2. Add ```<html manifest="app.manifest">``` to your HTML.
 3. If name of the manifest is different change it in 'jakecahce-sw.js'  
-```const manifestName = 'app.manifest';
+```
+const manifestName = 'app.manifest';
 ```
 4. optional parameter in 'jakecahce-sw.js' 
-``` const isAutoUpdate = false;
+``` 
+const isAutoUpdate = false;
 ```
 Means  autoupdate cache without message to SwapCahce
 5. That's it! Your website is now Jake-enabled!
