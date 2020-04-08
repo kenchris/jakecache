@@ -468,8 +468,9 @@ async function fromCache(request) {
 
 // to refresh cache
 async function updateCache(request, response) {
+    let url = new URL(request.url);
     // cache only js files
-    if (!request.url.endsWith('.js')) {
+    if (!url.pathname.endsWith('.js')) {
         return Promise.resolve();
     }
 
@@ -487,10 +488,7 @@ async function updateCache(request, response) {
     }
 
     return caches.open(cacheName).then((cache) =>
-        // todo check if we really need fetch
-        fetch(request).then((response) =>
-            cache.put(request, response.clone()).then(() => response)
-        )
+        cache.put(request, response)
     );
 }
 
@@ -537,8 +535,9 @@ self.addEventListener("fetch", function (event) {
             return await fromCache(event.request);
         } catch (e) {
             const resp = await fromNetwork(event.request);
+            let respClone = resp.clone();
             event.waitUntil(async function () {
-                await updateCache(event.request, resp);
+                await updateCache(event.request, respClone);
             }());
             return resp;
         }
