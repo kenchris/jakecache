@@ -269,7 +269,12 @@ class JakeCache extends PolyfilledEventTarget {
   }
 
   update() {
-    if (false) { }
+    if (false) {// this.status == this.UNCACHED || this.status == this.OBSOLETE) {
+      // If there is no such application cache, or if its
+      // application cache group is marked as obsolete, then throw
+      throw new DOMException(DOMException.INVALID_STATE_ERR,
+        'there is no application cache to update.')
+    }
 
     if (navigator.onLine && navigator.serviceWorker.controller) {
       navigator.serviceWorker.controller.postMessage({
