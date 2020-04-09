@@ -100,7 +100,7 @@ class JakeCache extends PolyfilledEventTarget {
       let html = document.querySelector("html");
       this.pathname = html.getAttribute(manifestAttr);
 
-      if (this.pathname && "serviceWorker" in navigator) {
+      if ("serviceWorker" in navigator) {
 
         var self = this;
 
