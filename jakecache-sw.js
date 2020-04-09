@@ -398,10 +398,15 @@ async function swapCache() {
     }
 }
 
+const manifestName = 'app.manifest';
+
+function getManifestUrl() {
+    let loc = location.pathname.replace(/([\w\-]+\.js)/, manifestName);
+    return loc;
+}
 
 self.addEventListener("message", function (event) {
-    let loc = location.pathname.replace('jakecache-sw.js', 'ns.appcache');
-    loc = location.pathname.replace('sw.js', 'ns.appcache');
+    let loc = getManifestUrl();
 
     switch (event.data.command) {
         case "update":
@@ -420,10 +425,8 @@ self.addEventListener("message", function (event) {
     }
 });
 
-const manifestName = 'app.manifest';
-
 self.addEventListener("install", function (event) {
-    let loc = location.pathname.replace(/([\w\-]+\.js)/, manifestName);
+    let loc = getManifestUrl();
 
     event.waitUntil(
         update(loc, { cache: "reload" })
