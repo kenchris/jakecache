@@ -455,12 +455,22 @@ async function fromCache(request) {
         manifest = await loadCurrentManifest();
     }
 
+    if (!updating && !manifest) {
+        // try recache if no manifest
+        let loc = getManifestUrl();
+        update(loc, { cache: "reload" });
+    }
+
+    if (cacheStatus !== CacheStatus.CACHED) {
+        return Promise.reject('no-cache');
+    }
+
     if (manifest) {
         cacheName = manifest.cacheName();
     }
 
     if (!cacheName) {
-        Promise.reject('no-cache');
+        return Promise.reject('no-cache');
     }
 
     return caches.open(cacheName).then((cache) =>
@@ -477,6 +487,10 @@ async function updateCache(request, response) {
         return Promise.resolve();
     }
 
+    if (cacheStatus !== CacheStatus.CACHED) {
+        return Promise.resolve();
+    }
+
     let cacheName = '';
     if (!manifest) {
         manifest = await loadCurrentManifest();
@@ -487,7 +501,7 @@ async function updateCache(request, response) {
     }
 
     if (!cacheName) {
-        Promise.reject('no-cache');
+        return Promise.reject('no-cache');
     }
 
     return caches.open(cacheName).then((cache) =>
@@ -496,7 +510,8 @@ async function updateCache(request, response) {
 }
 
 function shouldInterceptRequest(url) {
-    return false;
+    // intercept pax requests
+    return url.port == 10009;
 }
 
 self.addEventListener("fetch", function (event) {
