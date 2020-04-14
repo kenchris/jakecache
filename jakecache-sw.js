@@ -473,8 +473,15 @@ async function fromCache(request) {
         return Promise.reject('no-cache');
     }
 
+    let url = new URL(request.url);
+    if (request.mode === 'navigate') {
+        //make normilized url without query 
+        url.search = '';
+        url.hash = '';
+    }
+
     return caches.open(cacheName).then((cache) =>
-        cache.match(request).then((matching) =>
+        cache.match(url).then((matching) =>
             matching || Promise.reject('no-match')
         ));
 }
