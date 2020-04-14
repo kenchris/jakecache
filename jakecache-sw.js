@@ -54,7 +54,7 @@ class JakeCacheManifest {
     }
 
     restoreCache() {
-        this.cache = ["jakecache.js"];
+        this.cache = ["jakecache.js", "idb-keyval-iife.js"];
         let tmp = {};
         // Ignore different protocol
         for (let pathname of this._rawData.cache) {
