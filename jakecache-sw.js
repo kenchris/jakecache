@@ -343,8 +343,13 @@ async function update(pathname, options = {}) {
     catch (err) {
         updating = false;
         console.log(`JakeCache-SW error: ${err}`);
-        cacheStatus = CacheStatus.IDLE;
-        postMessage({ type: "idle" });
+        if (manifest) {
+            cacheStatus = CacheStatus.CACHED;
+            postMessage({ type: "noupdate" });
+        } else {
+            cacheStatus = CacheStatus.IDLE;
+            postMessage({ type: "idle" });
+        }
         return Promise.reject(err);
     }
 }
