@@ -9,6 +9,7 @@ const manifestStore = new idbKeyval.Store("manifest-db", "manifest-db");
 
 class JakeCacheManifest {
     constructor(data) {
+        this.cache = null;
         this._path = null;
         this._hash = null;
         this._isValid = false;
@@ -55,6 +56,7 @@ class JakeCacheManifest {
 
     restoreCache() {
         this.cache = ["jakecache.js", "idb-keyval-iife.js"];
+        this.searchCache = {};
         let tmp = {};
         // Ignore different protocol
         for (let pathname of this._rawData.cache) {
@@ -63,6 +65,8 @@ class JakeCacheManifest {
                 if (!tmp[path]) {
                     this.cache.push(path);
                     tmp[path] = path;
+
+                    this.searchCache[path.pathname] = 1;
                 }
             }
         }
@@ -96,6 +100,10 @@ class JakeCacheManifest {
         this._isValid = true;
     }
 
+    shouldBeCached(url) {
+        return url.pathname.endsWith('.js') || this.searchCache[url.pathname];
+    }
+
     pathName() {
         return this._path;
     }
@@ -105,6 +113,10 @@ class JakeCacheManifest {
         return version + "_" + this._hash;
     }
 
+    cache() {
+        return this.cache;
+    }
+
     fetchData(path, options = {}) {
         this._path = path;
 
@@ -112,8 +124,15 @@ class JakeCacheManifest {
             return Promise.resolve(false);
         }
 
+        const ms = Date.now();
+        let url = this._path;
+        if (url.indexOf('?') === -1) {
+            url += "?_=" + ms;
+        } else {
+            url += "&_=" + ms;
+        }
         // http://html5doctor.com/go-offline-with-application-cache/
-        return fetch(new Request(this._path, options), this._fetchOptions).then(
+        return fetch(new Request(url, options), this._fetchOptions).then(
             response => {
                 if (
                     response.type === "opaque" ||
@@ -123,17 +142,11 @@ class JakeCacheManifest {
                     return Promise.reject();
                 }
 
-                this._hash = options.hash ? options.hash : this._hash;
+                this._prevhash = options.hash ? options.hash : null;
 
                 return response.text().then(result => {
                     return new Promise((resolve, reject) => {
                         let hash = md5(result);
-                        if (this._hash && hash.toString() === this._hash.toString()) {
-                            console.log(`JakeCache-SW noupdate: ${hash}`);
-                            return resolve(false);
-                        }
-
-                        console.log(`JakeCache-SW update: ${hash} (was: ${this._hash})`);
 
                         this._hash = hash;
 
@@ -178,6 +191,14 @@ class JakeCacheManifest {
                         }
 
                         this.restoreCache();
+
+                        if (this._prevhash && hash.toString() === this._prevhash.toString()) {
+                            console.log(`JakeCache-SW no manifest update: ${hash}`);
+                            return resolve(false);
+                        }
+
+                        console.log(`JakeCache-SW manifest update: ${hash} (was: ${this._prevhash})`);
+
                         resolve(true);
                     });
                 });
@@ -186,7 +207,7 @@ class JakeCacheManifest {
     }
 }
 
-const isAutoUpdate = false;
+const isAutoUpdate = true;
 
 const CacheStatus = {
     UNCACHED: 0,
@@ -201,6 +222,7 @@ let manifest = null;
 let cacheStatus = CacheStatus.UNCACHED;
 
 function postMessage(msg) {
+    //    { includeUncontrolled: true, type: 'window' }
     return self.clients.matchAll().then(clients => {
 
         if (!clients.length) {
@@ -251,6 +273,7 @@ async function loadCurrentManifest() {
     }
 
     manifest = mnf;
+    cacheStatus = CacheStatus.CACHED;
     return Promise.resolve(manifest);
 }
 
@@ -259,9 +282,13 @@ async function deleteOldCaches() {
     if (!manifest) {
         manifest = await loadCurrentManifest();
     }
-
     if (manifest) {
         cacheWhitelist.push(manifest.cacheName());
+    }
+
+    const nextManifest = await loadManifest("next");
+    if (nextManifest) {
+        cacheWhitelist.push(nextManifest.cacheName());
     }
 
     console.log('JakeCache-SW deleteing old caches except:', cacheWhitelist);
@@ -304,13 +331,24 @@ async function update(pathname, options = {}) {
             self.options.hash = manifest.hash();
         }
 
-        const isNeededToUpdate = await nextManifest.fetchData(pathname, self.options);
+        let isNeededToUpdate = await nextManifest.fetchData(pathname, self.options);
+
+        // check keys in cache
+        if (!isNeededToUpdate) {
+            const cache = await caches.open(nextManifest.cacheName());
+            const keys = await cache.keys();
+            if (keys.length < nextManifest.cache.length) {
+                console.log(`JakeCache-SW cache has less entries then should be, updating cache`);
+                isNeededToUpdate = true;
+            }
+        }
+
         if (isNeededToUpdate) {
             console.log(`JakeCache-SW storing to cache ${nextManifest.cacheName()} `);
             const cache = await caches.open(nextManifest.cacheName());
             await cache.addAll(nextManifest.cache);
 
-            let isUpgrade = manifest && !isAutoUpdate;
+            let isUpgrade = manifest //&& !isAutoUpdate;
             if (isUpgrade) {
                 manifestVersion = 'next';
             }
@@ -320,12 +358,8 @@ async function update(pathname, options = {}) {
             console.log(`JakeCache-SW saved to indexed db ${nextManifest.cacheName()} `);
 
             if (isAutoUpdate) {
-                manifest = nextManifest;
-                try {
-                    await deleteOldCaches();
-                } catch (err) {
-                    console.log(`JakeCache-SW deleteOldCaches error: ${err}`);
-                }
+                console.log(`JakeCache-SW Auto Update`);
+                swapCache();
             }
             else if (isUpgrade) {
                 cacheStatus = CacheStatus.UPDATEREADY;
@@ -343,6 +377,7 @@ async function update(pathname, options = {}) {
     catch (err) {
         updating = false;
         console.log(`JakeCache-SW error: ${err}`);
+
         if (manifest) {
             cacheStatus = CacheStatus.CACHED;
             postMessage({ type: "noupdate" });
@@ -440,13 +475,14 @@ self.addEventListener("install", function (event) {
     );
 });
 
-self.addEventListener("activate", function (event) {
+self.addEventListener("activate", async function (event) {
     event.waitUntil(
         deleteOldCaches()
             .then(function () {
                 self.clients.claim();
             })
     );
+
 });
 
 function fromNetwork(request) {
@@ -494,10 +530,6 @@ async function fromCache(request) {
 // to refresh cache
 async function updateCache(request, response) {
     let url = new URL(request.url);
-    // cache only js files
-    if (!url.pathname.endsWith('.js')) {
-        return Promise.resolve();
-    }
 
     if (cacheStatus !== CacheStatus.CACHED) {
         return Promise.resolve();
@@ -516,14 +548,18 @@ async function updateCache(request, response) {
         return Promise.reject('no-cache');
     }
 
+    if (!manifest || !manifest.shouldBeCached(url)) {
+        return Promise.resolve();
+    }
+
+    console.log(`JakeCache-SW add to cache ${request.url}`);
     return caches.open(cacheName).then((cache) =>
         cache.put(request, response)
     );
 }
 
 function shouldInterceptRequest(url) {
-    // intercept pax requests
-    return url.port == 10009;
+    return false;
 }
 
 self.addEventListener("fetch", function (event) {
