@@ -49,9 +49,91 @@ NETWORK:
 *
 ```
 
-1. Include ``jakecache.js`` on your page, maybe via ```<script src="jakecache.js"></script>```
+1. sample setup 
+``` 
+            function injectJakeCacheScript() {
+                var s = document.createElement('script');
+                s.type = 'text/javascript';
+                s.async = true;
+                s.src = '@Url.Content("~/jakecache.js")';
+                var ss = document.getElementsByTagName('script')[0];
+                ss.parentNode.insertBefore(s, ss);
+            }
+            
+            function setUpCachehandlers() {
+                if (!('serviceWorker' in navigator)) {
+                    console.log('no serviceWorker');
+                    return;
+                }
+
+                if (!window.jakeCache) {
+                    setTimeout(setUpCachehandlers, 500);
+                    return;
+                }
+
+                window.jakeCache.addEventListener('downloading', function (ev) {
+                    console.log('JakeCache downloading');
+
+                });
+
+                window.jakeCache.addEventListener('cached', function (ev) {
+                    console.log('JakeCache cached');
+
+                });
+
+                window.jakeCache.addEventListener('sw-not-attached', function (ev) {
+                    console.log('JakeCache Service worker not attached !!!');
+
+                });
+
+                window.jakeCache.addEventListener('checking', function (ev) {
+                    console.log('JakeCache checking');
+
+                });
+
+                window.jakeCache.addEventListener('updateready', function (ev) {
+                    console.log('JakeCache updateready');
+                    window.jakeCache.swapCache();
+                });
+
+                window.jakeCache.addEventListener('updated', function (ev) {
+                    console.log('JakeCache updated');
+                    var url = window.location.href;
+
+                    // reload to root of application
+                    if (window.location.href.indexOf('#') > 0) {
+                        url = window.location.href.substr(0, window.location.href.indexOf('#')) ;
+                    }
+                    if (url && !url.endsWith('/')) {
+                        url += '/';
+                    }
+                    window.location = url;
+                });
+
+                window.jakeCache.addEventListener('error', function (ev) {
+                    console.log(ev.message);
+                });
+
+                console.log('jakeCache handlers were setup');
+            }
+
+            if ('serviceWorker' in navigator) {
+                injectJakeCacheScript();
+                setUpCachehandlers();
+            }        
+            
+```
 2. Add ```<html manifest="app.manifest">``` to your HTML.
-3. That's it! Your website is now Jake-enabled!
+3. If name of the manifest is different change it in 'jakecahce-sw.js'  
+```
+const manifestName = 'app.manifest';
+```
+4. optional parameter in 'jakecahce-sw.js' 
+``` 
+const isAutoUpdate = false;
+```
+Means  autoupdate cache without message to SwapCahce
+5. That's it! Your website is now Jake-enabled!
 
 ## License
 

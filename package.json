@@ -7,7 +7,7 @@
     "dist/jakecache-sw.js"
   ],
   "scripts": {
-    "build": "node scripts/build.js",
+    "build": "rollup -c",
     "test": "node test/index.js",
     "prepublish": "npm build"
   },
@@ -32,7 +32,14 @@
   },
   "homepage": "https://github.com/kenchris/jakecache#readme",
   "devDependencies": {
-    "rollup": "^0.25.8",
+    "@rollup/plugin-commonjs": "^11.0.1",
+    "@rollup/plugin-node-resolve": "^7.0.0",
+    "npm-run-all": "^4.1.5",
+    "rollup": "^1.16.2",
+    "rollup-plugin-terser": "^5.0.0",
     "tape": "^4.5.1"
+  },
+  "dependencies": {
+    "idb-keyval": "^3.2.0"
   }
 }
